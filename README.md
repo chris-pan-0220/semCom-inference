@@ -8,11 +8,16 @@ repo
 │   └── header files
 ├── lib
 │   └── *.so, *.a
-├── mwnl
 ├── src
-│   └── model
-│       └── *.onnx (trained model)
 ├── ... (Python scripts & *.c files)
+```
+
+# usage
+
+use `make` to compile all *.out
+
+```bash
+make
 ```
 
 # system latency solutions
