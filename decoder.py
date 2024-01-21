@@ -1,4 +1,4 @@
-import os, time, pickle, sys, argparse
+import os, time, pickle, sys, argparse, yaml
 import torch
 sys.path.append('./')
 from nltk.translate import bleu
@@ -8,7 +8,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import socket
-import os
 import json
 import pandas as pd
 
@@ -204,6 +203,19 @@ def convert_binary_to_float_v1(binary_tensor):
 
     return restored_values
 
+
+with open('./config/test.yaml', 'r') as file:
+    config = yaml.safe_load(file)
+
+decoder_path = config['model']['decoder_path']
+embeds_shared_path = config['model']['embeds_shared_path']
+train_dict_path = config['train']['train_dict_path']
+
+print(f"decoder path: {decoder_path}")
+print(f"embeds path: {embeds_shared_path}")
+print(f"train dict path: {train_dict_path}")
+
+
 embeds_shared = Embeds(vocab_size=24, num_hidden=512).to(device)
 decoder = LSTMDecoder(channel_dim=channel_dim, embedds=embeds_shared, vocab_size = 24).to(device)
 
@@ -288,14 +300,14 @@ if __name__ == "__main__":
     total_time = [0 for _ in range(max_test_time)]
 
     # dict_train = pickle.load(open('./1.train_dict.pkl', 'rb'))
-    dict_train = pickle.load(open('/home/eric/mwnl/train_dict.pkl', 'rb'))
+    dict_train = pickle.load(open(train_dict_path, 'rb'))
     rev_dict = {vv: kk for kk, vv in dict_train.items()}
 
     success_count = 0
     failure_count = 0
 
-    decoder.load_state_dict(torch.load('/home/eric/mwnl/ckpt_AWGN_CE/decoder_epoch99.pth', map_location=device))
-    embeds_shared.load_state_dict(torch.load('/home/eric/mwnl/ckpt_AWGN_CE/embeds_shared_epoch99.pth',  map_location=device))
+    decoder.load_state_dict(torch.load(decoder_path, map_location=device))
+    embeds_shared.load_state_dict(torch.load(embeds_shared_path,  map_location=device))
     
     warmup(input_data=torch.tensor([[[0,1], [1,0]]]).to(device), decoder=decoder)
 

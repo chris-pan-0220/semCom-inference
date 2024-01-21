@@ -1,4 +1,4 @@
-import os, time, pickle, sys, argparse
+import os, time, pickle, sys, argparse, yaml
 import torch
 sys.path.append('./')
 from ctypes import *
@@ -230,6 +230,17 @@ def quantize_and_convert_to_binary_with_integer_part(input_tensor, error_boundar
 
     return binary_tensor
 
+with open('./config/test.yaml', 'r') as file:
+    config = yaml.safe_load(file)
+
+encoder_path = config['model']['encoder_path']
+embeds_shared_path = config['model']['embeds_shared_path']
+train_dict_path = config['train']['train_dict_path']
+
+print(f"encoder path: {encoder_path}")
+print(f"embeds path: {embeds_shared_path}")
+print(f"train dict path: {train_dict_path}")
+
 # device = torch.device("cpu")
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # use CPU or GPU
 embeds_shared = Embeds(vocab_size=24, num_hidden=512).to(device)
@@ -339,11 +350,11 @@ if __name__ == "__main__":
     total_time = [0 for _ in range(max_test_time)]
 
     # dict_train = pickle.load(open('./1.train_dict.pkl', 'rb'))
-    dict_train = pickle.load(open('/home/eric/mwnl/train_dict.pkl', 'rb'))
+    dict_train = pickle.load(open(train_dict_path, 'rb'))
     rev_dict = {vv: kk for kk, vv in dict_train.items()}
 
-    encoder.load_state_dict(torch.load('/home/eric/mwnl/ckpt_AWGN_CE/encoder_epoch99.pth', map_location=device))
-    embeds_shared.load_state_dict(torch.load('/home/eric/mwnl/ckpt_AWGN_CE/embeds_shared_epoch99.pth',  map_location=device))
+    encoder.load_state_dict(torch.load(encoder_path, map_location=device))
+    embeds_shared.load_state_dict(torch.load(embeds_shared_path,  map_location=device))
     
     warmup(encoder=encoder, normlize_layer=normlize_layer)
 

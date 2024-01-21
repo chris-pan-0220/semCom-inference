@@ -1,0 +1,6 @@
+model:
+  encoder_path: './src/model/encoder_epoch99.pth'
+  decoder_path: './src/model/decoder_epoch99.pth'
+  embeds_shared_path: './src/model/embeds_shared_epoch99.pth'
+train:
+  train_dict_path: './src/train/train_dict.pkl'
