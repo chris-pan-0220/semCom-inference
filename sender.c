@@ -6,31 +6,60 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <arpa/inet.h>
 
 #define EXAMPLE_LEN 1
 #define MAX_PACKET_LEN 256
 
+int isValidIpAddress(const char *ip) {
+    struct sockaddr_in sa;
+    return inet_pton(AF_INET, ip, &(sa.sin_addr)) != 0;
+}
+
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        fprintf(stderr, "Usage: %s -n TEST_TIME\n", argv[0]);
+    if (argc != 5) {
+        fprintf(stderr, "Usage: %s -n TEST_TIME -p RECVER_IP:PORT\n", argv[0]);
         return 1;
     }
 
-    if (strcmp(argv[1], "-n") != 0) {
-        fprintf(stderr, "Error: missing argument `-n`\n");
+    char *ip = NULL;
+    int number = 0;
+    int ipProvided = 0, numberProvided = 0;
+
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-n") == 0 && i + 1 < argc) {
+            number = atoi(argv[i + 1]);
+            numberProvided = 1;
+            i++;
+        } else if (strcmp(argv[i], "-p") == 0 && i + 1 < argc) {
+            ip = argv[i + 1];
+            ipProvided = 1;
+            i++; 
+        }
+    }
+
+    if (!ipProvided || !numberProvided) {
+        fprintf(stderr, "Error: Missing required arguments\n");
         return 1;
     }
 
-    const int TEST_TIME = atoi(argv[2]);
-
-    if (TEST_TIME < 1) {
-        fprintf(stderr, "Error:  argument `TEST_TIME` must be greater than 0\n");
+    char *token = strtok(ip, ":");
+    if (token == NULL || !isValidIpAddress(token)) {
+        fprintf(stderr, "Error: Invalid IP address\n");
         return 1;
     }
+
+    printf("recver ip: %s\n", ip);
+    int recver_port = atoi(strtok(NULL, ":"));
+    printf("recver port: %d\n", recver_port);
+
+    const int TEST_TIME = number;
+
+    // read recver ip from argv
 
     int encoder_socket, recver_socket;
-    struct sockaddr_un encoder_addr, recver_addr;
-    int connection_result;
+    struct sockaddr_un encoder_addr;
+    struct sockaddr_in recver_addr;
 
     const char * const SemanticRL_example[EXAMPLE_LEN] = {
         "planets engage in an eternal graceful dance around sun rise\0"
@@ -46,23 +75,24 @@ int main(int argc, char* argv[]) {
     encoder_addr.sun_family = AF_UNIX;
     strcpy(encoder_addr.sun_path, "semcom_encoder");// unix socket path
 
-    connection_result = connect(encoder_socket, (struct sockaddr *)&encoder_addr, sizeof(encoder_addr));
-
-    if (connection_result == -1) {
-        perror("Error:");
+    if(connect(encoder_socket, (struct sockaddr *)&encoder_addr, sizeof(encoder_addr)) == -1){
+        perror("Error: connect to encoder fail");
         exit(1);
     }
 
     /*connect to recver*/
-    recver_socket = socket(AF_UNIX, SOCK_STREAM, 0);
+    recver_socket = socket(AF_INET, SOCK_STREAM, 0);
 
-    recver_addr.sun_family = AF_UNIX;
-    strcpy(recver_addr.sun_path, "semcom_recver");// unix socket path
+    recver_addr.sin_family = AF_INET;
+    recver_addr.sin_port = htons(recver_port);
 
-    connection_result = connect(recver_socket, (struct sockaddr *)&recver_addr, sizeof(recver_addr));
+    if(inet_pton(AF_INET, ip, &recver_addr.sin_addr) <= 0) {
+        fprintf(stderr,"Invalid ip address/ Address not supported \n");
+        return -1;
+    }
 
-    if (connection_result == -1) {
-        perror("Error:");
+    if(connect(recver_socket, (struct sockaddr *)&recver_addr, sizeof(recver_addr)) == -1){
+        perror("Error connect to recver: ");
         exit(1);
     }
 
@@ -90,9 +120,12 @@ int main(int argc, char* argv[]) {
                 exceed_10ms += 1;
 
             // send encoding response to recver
-            write(recver_socket, response, strlen(response));
+            // write(recver_socket, response, strlen(response));
+            send(recver_socket, response, strlen(response), 0);
             // wait for recver ok
-            read(recver_socket, response, MAX_PACKET_LEN);
+            // read(recver_socket, response, MAX_PACKET_LEN);
+            recv(recver_socket, response, MAX_PACKET_LEN, 0);
+
             // write(recver_socket, SemanticRL_example[i], strlen(SemanticRL_example[i]));
         }
     }
