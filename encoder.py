@@ -236,10 +236,12 @@ with open('./config/test.yaml', 'r') as file:
 encoder_path = config['model']['encoder_path']
 embeds_shared_path = config['model']['embeds_shared_path']
 train_dict_path = config['train']['train_dict_path']
+socket_path = config['socket']['encoder_path']
 
 print(f"encoder path: {encoder_path}")
 print(f"embeds path: {embeds_shared_path}")
 print(f"train dict path: {train_dict_path}")
+print(f"socket path: {socket_path}")
 
 # device = torch.device("cpu")
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # use CPU or GPU
@@ -359,7 +361,7 @@ if __name__ == "__main__":
     warmup(encoder=encoder, normlize_layer=normlize_layer)
 
     #  Set the path for the Unix socket
-    socket_path = 'semcom_encoder'
+    # socket_path = 'semcom_encoder'
 
     # remove the socket file if it already exists
     try:

@@ -4,3 +4,6 @@ model:
   embeds_shared_path: './src/model/embeds_shared_epoch99.pth'
 train:
   train_dict_path: './src/train/train_dict.pkl'
+socket:
+  encoder_path: 'semcom_encoder'
+  decoder_path: 'semcom_decoder'

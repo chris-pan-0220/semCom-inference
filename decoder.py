@@ -210,11 +210,12 @@ with open('./config/test.yaml', 'r') as file:
 decoder_path = config['model']['decoder_path']
 embeds_shared_path = config['model']['embeds_shared_path']
 train_dict_path = config['train']['train_dict_path']
+socket_path = config['socket']['decoder_path']
 
 print(f"decoder path: {decoder_path}")
 print(f"embeds path: {embeds_shared_path}")
 print(f"train dict path: {train_dict_path}")
-
+print(f"socket path: {socket_path}")
 
 embeds_shared = Embeds(vocab_size=24, num_hidden=512).to(device)
 decoder = LSTMDecoder(channel_dim=channel_dim, embedds=embeds_shared, vocab_size = 24).to(device)
@@ -312,7 +313,7 @@ if __name__ == "__main__":
     warmup(input_data=torch.tensor([[[0,1], [1,0]]]).to(device), decoder=decoder)
 
     #  Set the path for the Unix socket
-    socket_path = 'semcom_decoder'
+    # socket_path = 'semcom_decoder'
 
     # remove the socket file if it already exists
     try:
